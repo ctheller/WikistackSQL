@@ -25,9 +25,16 @@ var Page = db.define('page', {
 		defaultValue: 'closed'
 	},
 	tags: {
-		type: Sequelize.ARRAY(Sequelize.STRING)  
+		type: Sequelize.ARRAY(Sequelize.STRING)
 	}
 }, {
+	instanceMethods: {
+		findSimilar: function(){
+			var tags = this.getDataValue('tags');
+			var urlTitle = this.getDataValue('urlTitle')
+			return Page.findAll({where: {$and: {tags: {$overlap: tags}, urlTitle: {$ne: urlTitle}}}});
+		}  
+	},
 	hooks: {
 		beforeValidate: function(page, options){
 

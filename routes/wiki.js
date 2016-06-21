@@ -41,6 +41,44 @@ router.get('/add', function(req, res) {
   res.render('addpage');
 });
 
+router.get('/search', function(req, res) {
+	if (!req.query.tags) return res.render('search');
+	var searchedTags = req.query.tags.split(" ");
+	searchedTags = searchedTags.map(function(tag){
+		if (tag[0]!= "#") return "#" + tag;
+		else return tag;
+	});
+	Page.findAll({where: {tags: {$overlap: searchedTags}}})
+	.then(function(result){
+		var pagesArray = result.map(function(pageObj){
+			return pageObj.dataValues;
+		})
+		res.render('index', {pages: pagesArray} )
+	});
+
+	// .then(function(result){
+	// 	console.log(result);
+	// })
+});
+
+router.get('/:urlTitle/similar', function(req, res, next){
+	var currentPage = Page.findOne({
+		where: {urlTitle: req.params.urlTitle}
+	})
+	currentPage.then(function(page){
+		var similar = page.findSimilar();
+		similar.then(function(pages){
+			var pagesArray = pages.map(function(pageObj){
+			return pageObj.dataValues;
+			})
+			res.render("index", {pages: pagesArray})
+		}).catch(function(err){
+			console.error(err);
+			res.render('index');
+		});
+	})
+});
+
 router.get('/:urlTitle', function(req, res, next){
 	var currentPage = Page.findOne({
 		where: {urlTitle: req.params.urlTitle}
@@ -59,11 +97,6 @@ router.get('/:urlTitle', function(req, res, next){
 
 // COULD reimplement the above as two separate promises both that use USERID to do their lookups.
 // Then use Promise.all (bluebird) to make sure both are processed before rendering the page.
-
-
-router.get('/search', function(req,res,next){
-
-});
 
 
 
